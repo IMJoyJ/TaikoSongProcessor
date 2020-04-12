@@ -7,7 +7,7 @@ namespace TaikoSongProcessor.Lib.Extensions
     {
         public static FileInfo GetTjaFile(this DirectoryInfo directory)
         {
-            return directory.GetFiles("main.tja").Any() ? directory.GetFiles("main.tja").FirstOrDefault() : directory.GetFiles("*.tja").FirstOrDefault();
+            return directory.GetFiles("main.tja").Any() ? directory.GetFiles("main.tja").FirstOrDefault() : directory.GetFiles("*.tja").FirstOrDefault(tja=>!tja.Name.Contains("裏")); //don't select backsides
         }
 
         public static FileInfo GetMp3File(this DirectoryInfo directory)
