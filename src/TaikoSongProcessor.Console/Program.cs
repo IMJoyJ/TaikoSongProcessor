@@ -142,14 +142,23 @@ namespace TaikoSongProcessor.ConsoleApp
                     {
                         Console.WriteLine($"Looking in {dirInfo.FullName}...");
 
+                        var oszFiles = dirInfo.GetOszFiles();
+
                         DirectoryInfo[] subDirs = dirInfo.GetDirectories();
-                        if (subDirs.Length == 0)
+                        if (subDirs.Length == 0 && oszFiles.Length == 0)
                         {
-                            Console.WriteLine($"Didn't find any subdirectories here :(");
+                            Console.WriteLine($"Didn't find any archives or subdirs here :(");
                         }
                         else
                         {
                             int count = 0;
+
+                            foreach (FileInfo fileInfo in oszFiles)
+                            {
+                                string songName = Path.GetFileNameWithoutExtension(fileInfo.FullName);
+                                Console.WriteLine($"Found song {songName}");
+                                count += 1;
+                            }
 
                             foreach (DirectoryInfo dir in subDirs)
                             {
