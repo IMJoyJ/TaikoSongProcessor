@@ -62,12 +62,13 @@ namespace TaikoSongProcessor.lib
                 Subtitle = GetStringValue("subtitle"),
                 Order = _id,
                 Preview = GetDoubleValue("demostart"),
+                Type = SongTypeEnum.Tja.ToString().ToLower(),
                 // Offset = GetDoubleValue("offset"),
                 Offset = 0,
                 TitleLang = GetLanguageStrings("title"),
                 SubtitleLang = GetLanguageStrings("subtitle"),
-                Courses = GetCourses(),
-                Hash = Guid.NewGuid().ToString() //Taiko-web doesn't actually require a real hash here - any randomized poo will work. Used to id highscores.
+                Courses = GetCourses()
+                
             };
 
             double volume = GetDoubleValue("songvol");

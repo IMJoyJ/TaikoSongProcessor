@@ -42,10 +42,10 @@ namespace TaikoSongProcessor.Lib.Models
         public int CategoryId { get; set; }
 
         /// <summary>
-        /// Type of song. We currently only support <see cref="SongTypeEnum.Tja"/>.
+        /// Type of song.
         /// </summary>
         [JsonPropertyName("type")]
-        public string Type { get; set; } = SongTypeEnum.Tja.ToString().ToLower();
+        public string Type { get; set; }
 
         [JsonPropertyName("offset")]
         public double Offset { get; set; }
@@ -98,6 +98,8 @@ namespace TaikoSongProcessor.Lib.Models
         public Song()
         {
             GeneratedOn = DateTime.Now;
+            Hash = Guid.NewGuid()
+                .ToString(); //Taiko-web doesn't actually require a real hash here - any randomized poo will work. Used to id highscores.
         }
     }
 
@@ -125,6 +127,11 @@ namespace TaikoSongProcessor.Lib.Models
         public Course Oni { get; set; }
         [JsonPropertyName("ura")]
         public Course Ura { get; set; }
+
+        public bool HasCourses()
+        {
+            return Easy != null || Normal != null || Hard != null || Oni != null || Ura != null;
+        }
     }
 
     public class Course

@@ -15,13 +15,20 @@ namespace TaikoSongProcessor.Lib.Extensions
             return directory.GetFiles("main.mp3").Any() ? directory.GetFiles("main.mp3").FirstOrDefault() : directory.GetFiles("*.mp3").FirstOrDefault();
         }
 
+        public static FileInfo[] GetOszFiles(this DirectoryInfo directory)
+        {
+            return directory.GetFiles("*.osz");
+        }
+
         public static bool ContainsSong(this DirectoryInfo directory)
         {
             FileInfo tjaFile = directory.GetTjaFile();
 
             FileInfo mp3File = directory.GetMp3File();
 
-            return tjaFile != null && mp3File != null;
+            FileInfo[] oszFiles = directory.GetOszFiles();
+
+            return (tjaFile != null && mp3File != null) || oszFiles.Any();
         }
     }
 }
