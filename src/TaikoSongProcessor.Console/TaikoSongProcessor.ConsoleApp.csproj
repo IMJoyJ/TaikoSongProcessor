@@ -4,6 +4,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <Authors>Various</Authors>
+    <Company>N/A</Company>
+    <Product>TaikoSongProcessor</Product>
+    <PackageId>TaikoSongProcessor</PackageId>
+    <AssemblyName>TaikoSongProcessor</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using TaikoSongProcessor.Lib;
 using TaikoSongProcessor.Lib.Extensions;
 
@@ -9,7 +10,7 @@ namespace TaikoSongProcessor.ConsoleApp
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Console.OutputEncoding = Encoding.GetEncoding(932); //needed to enable moonrunes
@@ -28,9 +29,11 @@ namespace TaikoSongProcessor.ConsoleApp
             WriteMarkerFileDescription();
 
             ConsoleKey markerYesNo;
+
+            Console.WriteLine("Do you want to generate \"marker\" files? (y/N) ");
+
             do
             {
-                Console.WriteLine("Do you want to generate \"marker\" files? (y/N) ");
                 markerYesNo = Console.ReadKey(true).Key;
 
                 if (markerYesNo.Equals(ConsoleKey.Enter) || markerYesNo.Equals(ConsoleKey.N))
@@ -39,7 +42,7 @@ namespace TaikoSongProcessor.ConsoleApp
                     Console.Write("N");
                     Console.WriteLine();
                 }
-                else
+                else if(markerYesNo.Equals(ConsoleKey.Y))
                 {
                     generateMarkers = true;
                     Console.Write("Y");
@@ -54,6 +57,8 @@ namespace TaikoSongProcessor.ConsoleApp
             SongProcessor songProcessor = new SongProcessor(directory, startId, categoryId, generateMarkers);
 
             songProcessor.ProcessDirectory();
+
+            await Task.Delay(2000);
         }
 
         #region Description texts
