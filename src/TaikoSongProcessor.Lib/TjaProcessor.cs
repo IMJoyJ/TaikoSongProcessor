@@ -148,7 +148,8 @@ namespace TaikoSongProcessor.lib
         {
 
             List<string> findCourse = _tjaFileContents.SkipWhile(line =>
-                    !line.StartsWith($"course:{difficulty.ToString()}", StringComparison.InvariantCultureIgnoreCase))
+                    !line.StartsWith($"course:{difficulty.ToString()}", StringComparison.InvariantCultureIgnoreCase) &&
+                    !line.StartsWith($"course:{(int)difficulty}", StringComparison.InvariantCultureIgnoreCase))
                 .ToList();
 
             if (findCourse.Count == 0)
