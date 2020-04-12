@@ -57,28 +57,8 @@ namespace TaikoSongProcessor.Lib
                 FileInfo tjaFile = subDirectory.GetTjaFile();
                 FileInfo mp3File = subDirectory.GetMp3File();
 
-                Console.Write($"[{count.ToString(format)}/{total.ToString()}] {Path.GetFileNameWithoutExtension(tjaFile.FullName)}..");
-
-                string outputPath = $"{_outputDirectory.FullName}\\{id}";
-
-                Directory.CreateDirectory(outputPath);
-
-#if !DEBUG
-                mp3File.CopyTo($"{outputPath}\\main.mp3",true);
-#endif
-
-                tjaFile.CopyTo($"{outputPath}\\main.tja", true);
-
-                if (_generateMarkers) //behind a switch for now since I don't want to piss off my FTP server (yet)
-                {
-                    HepburnConverter hepburn = new HepburnConverter();
-                    string markerFile = $"{outputPath}\\{Path.GetFileNameWithoutExtension(WanaKana.ToRomaji(hepburn, tjaFile.FullName))}";
-
-                    if (!File.Exists(markerFile))
-                    {
-                        File.Create(markerFile); //create an empty file with the song name, just to keep shit organised
-                    }
-                }
+                Console.Write(
+                    $"[{count.ToString(format)}/{total.ToString()}] {Path.GetFileNameWithoutExtension(tjaFile.FullName)}..");
 
                 Song newSong = tjaProcessor.Process(tjaFile, id);
 
@@ -88,10 +68,34 @@ namespace TaikoSongProcessor.Lib
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("OK! \n");
                     Console.ResetColor();
+                    
+                    string outputPath = $"{_outputDirectory.FullName}\\{id}";
+
+                    Directory.CreateDirectory(outputPath);
+
+#if !DEBUG
+                mp3File.CopyTo($"{outputPath}\\main.mp3",true);
+#endif
+
+                    tjaFile.CopyTo($"{outputPath}\\main.tja", true);
+
+                    if (_generateMarkers) //behind a switch for now since I don't want to piss off my FTP server (yet)
+                    {
+                        HepburnConverter hepburn = new HepburnConverter();
+                        string markerFile =
+                            $"{outputPath}\\{Path.GetFileNameWithoutExtension(WanaKana.ToRomaji(hepburn, tjaFile.FullName))}";
+
+                        if (!File.Exists(markerFile))
+                        {
+                            File.Create(
+                                markerFile); //create an empty file with the song name, just to keep shit organised
+                        }
+                    }
+
                     succesful += 1;
+                    id += 1;
                 }
 
-                id += 1;
                 count += 1;
             }
 
