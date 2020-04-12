@@ -22,6 +22,7 @@ namespace TaikoSongProcessor.Lib
         private int _id;
         private IniDataParser _dataParser;
         private DirectoryInfo _tempDirectory;
+        private const int TAIKOMODE = 1;
 
         public OsuProcessor(int categoryId, DirectoryInfo tempDirectory)
         {
@@ -61,19 +62,27 @@ namespace TaikoSongProcessor.Lib
                 }
 
                 //grab the first beatmap
-                ZipArchiveEntry firstMap = zip.Entries.FirstOrDefault(entry =>
-                    entry.Name.Contains(".osu", StringComparison.InvariantCultureIgnoreCase));
+                List<ZipArchiveEntry> containsBeatmaps = zip.Entries.Where(entry =>
+                    entry.Name.Contains(".osu", StringComparison.InvariantCultureIgnoreCase)).ToList();
 
-                if (firstMap == null)
+                if (!containsBeatmaps.Any())
                 {
                     ConsoleHelper.WriteError("Archive contains no beatmaps!");
                     return null;
                 }
 
-                song = GetSongData(GetIniData(firstMap)); //initial load for the metadata
+                List<ZipArchiveEntry> beatmaps = containsBeatmaps.Where(ContainsTaikoBeatmap).ToList();
+
+                if (!beatmaps.Any())
+                {
+                    ConsoleHelper.WriteError("Archive contains no Osu!Taiko beatmaps!!");
+                    return null;
+                }
+
+                song = GetSongData(GetIniData(beatmaps.FirstOrDefault())); //initial load for the metadata
                 if (song != null)
                 {
-                    song.Courses = ProcessCourses(zip);
+                    song.Courses = ProcessCourses(beatmaps);
                     if (song.Courses != null)
                     {
                         mp3File.ExtractToFile($"{_tempDirectory}\\main.mp3");
@@ -89,7 +98,17 @@ namespace TaikoSongProcessor.Lib
             return song;
         }
 
-        private Courses ProcessCourses(ZipArchive zip)
+        private bool ContainsTaikoBeatmap(ZipArchiveEntry file)
+        {
+            IniData data = GetIniData(file);
+
+            return string.Equals(
+                data.GetKey("general.mode"), 
+                TAIKOMODE.ToString(),
+                StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        private Courses ProcessCourses(List<ZipArchiveEntry> beatmaps)
         {
             Courses courses = new Courses();
 
@@ -99,24 +118,32 @@ namespace TaikoSongProcessor.Lib
             Regex oniRegex = new Regex(DifficultyLabels.OniRegex, RegexOptions.IgnoreCase);
             Regex uraRegex = new Regex(DifficultyLabels.UraRegex, RegexOptions.IgnoreCase);
 
-            foreach (ZipArchiveEntry archiveEntry in zip.Entries.Where(entry=>entry.Name.EndsWith(".osu",StringComparison.InvariantCultureIgnoreCase)))
+            foreach (ZipArchiveEntry archiveEntry in beatmaps)
             {
                 string filename = archiveEntry.Name;
                 
                 if (easyRegex.Match(filename).Success)
                 {
+                    if (courses.Easy != null) continue;
                     courses.Easy = ProcessCourse(archiveEntry, DifficultyEnum.Easy);
                 }else if (normalRegex.Match(filename).Success)
                 {
+                    if (courses.Normal != null) continue;
                     courses.Normal = ProcessCourse(archiveEntry, DifficultyEnum.Normal);
-                }else if (hardRegex.Match(filename).Success)
+                }
+                else if (hardRegex.Match(filename).Success)
                 {
+                    if (courses.Hard != null) continue;
                     courses.Hard = ProcessCourse(archiveEntry, DifficultyEnum.Hard);
-                }else if (oniRegex.Match(filename).Success)
+                }
+                else if (oniRegex.Match(filename).Success)
                 {
+                    if (courses.Oni != null) continue;
                     courses.Oni = ProcessCourse(archiveEntry, DifficultyEnum.Oni);
-                }else if (uraRegex.Match(filename).Success)
+                }
+                else if (uraRegex.Match(filename).Success)
                 {
+                    if (courses.Ura != null) continue;
                     courses.Ura = ProcessCourse(archiveEntry, DifficultyEnum.Ura);
                 }
             }
@@ -142,7 +169,7 @@ namespace TaikoSongProcessor.Lib
                 {
                     course.Stars = starsInt;
 
-                    zipArchiveEntry.ExtractToFile($"{_tempDirectory.FullName}\\{difficulty.ToString()}.osu");
+                    zipArchiveEntry.ExtractToFile($"{_tempDirectory.FullName}\\{difficulty.ToString().ToLower()}.osu");
 
                     return course;
                 }
@@ -177,6 +204,23 @@ namespace TaikoSongProcessor.Lib
                 return null;
             }
 
+            if (data.TryGetKey("general.mode", out string modeString))
+            {
+                if (int.TryParse(modeString, out int mode))
+                {
+                    if (mode != TAIKOMODE)
+                    {
+                        ConsoleHelper.WriteError("Not an Osu!Taiko beatmap!!");
+                        return null;
+                    }
+                }
+            }
+            else
+            {
+                ConsoleHelper.WriteError("Could not determine mode!");
+                return null;
+            }
+
             if (data.TryGetKey("general.previewtime", out string previewTime))
             {
                 if(double.TryParse(previewTime, out double previewTimeAsDbl))
@@ -201,8 +245,8 @@ namespace TaikoSongProcessor.Lib
                 return null;
             }
 
-            if (data.GetKey("metadata.artist") != null &&
-                data.GetKey("metadata.source") != null)
+            if (!string.IsNullOrWhiteSpace(data.GetKey("metadata.artist")) &&
+                !string.IsNullOrWhiteSpace(data.GetKey("metadata.source")))
             {
                 song.Subtitle = $"{data.GetKey("metadata.artist")} - {data.GetKey("metadata.source")}";
             }
@@ -210,8 +254,6 @@ namespace TaikoSongProcessor.Lib
             {
                 song.Subtitle = data.GetKey("metadata.artist");
             }
-
-            
 
             return song;
         }
