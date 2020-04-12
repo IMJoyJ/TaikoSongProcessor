@@ -75,6 +75,15 @@ namespace TaikoSongProcessor.lib
             if (!string.IsNullOrWhiteSpace(value))
             {
                 value = value?.Substring(value.IndexOf(':') + 1);
+                if (value.StartsWith("--"))
+                {
+                    value = value.Remove(0, 2);
+                }
+
+                if (value.StartsWith("++"))
+                {
+                    value = value.Remove(0, 2);
+                }
             }
             return value;
         }
