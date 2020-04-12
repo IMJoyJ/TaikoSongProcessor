@@ -77,7 +77,7 @@ namespace TaikoSongProcessor.lib
             }
             else
             {
-                song.Volume = 100 / volume;
+                song.Volume = volume / 100;
             }
 
             return song;
