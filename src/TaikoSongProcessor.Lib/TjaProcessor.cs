@@ -66,10 +66,19 @@ namespace TaikoSongProcessor.lib
                 Offset = 0,
                 TitleLang = GetLanguageStrings("title"),
                 SubtitleLang = GetLanguageStrings("subtitle"),
-                Volume = 100 / GetDoubleValue("songvol"),
                 Courses = GetCourses(),
                 Hash = Guid.NewGuid().ToString() //Taiko-web doesn't actually require a real hash here - any randomized poo will work. Used to id highscores.
             };
+
+            double volume = GetDoubleValue("songvol");
+            if (volume == 0)
+            {
+                song.Volume = 1;
+            }
+            else
+            {
+                song.Volume = 100 / volume;
+            }
 
             return song;
         }
@@ -104,7 +113,7 @@ namespace TaikoSongProcessor.lib
                 return result;
             }
 
-            return 100;
+            return 0;
         }
 
         private LanguageStrings GetLanguageStrings(string fieldName)
