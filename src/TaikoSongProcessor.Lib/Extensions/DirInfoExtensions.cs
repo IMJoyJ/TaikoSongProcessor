@@ -7,12 +7,12 @@ namespace TaikoSongProcessor.Lib.Extensions
     {
         public static FileInfo GetTjaFile(this DirectoryInfo directory)
         {
-            return directory.GetFiles("main.tja").Any() ? directory.GetFiles("main.tja").First() : directory.GetFiles("*.tja").First();
+            return directory.GetFiles("main.tja").Any() ? directory.GetFiles("main.tja").FirstOrDefault() : directory.GetFiles("*.tja").FirstOrDefault();
         }
 
         public static FileInfo GetMp3File(this DirectoryInfo directory)
         {
-            return directory.GetFiles("main.mp3").Any() ? directory.GetFiles("main.mp3").First() : directory.GetFiles("*.mp3").First();
+            return directory.GetFiles("main.mp3").Any() ? directory.GetFiles("main.mp3").FirstOrDefault() : directory.GetFiles("*.mp3").FirstOrDefault();
         }
 
         public static bool ContainsSong(this DirectoryInfo directory)
