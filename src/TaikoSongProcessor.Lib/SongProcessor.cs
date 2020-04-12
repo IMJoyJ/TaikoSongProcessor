@@ -42,23 +42,31 @@ namespace TaikoSongProcessor.Lib
                 }
             }
 
-            Console.WriteLine($"Processing {subDirectories.Count()} songs!");
-
-
+            int total = subDirectories.Count;
             int id = _startId;
+            int count = 1;
+            int succesful = 0;
+
+            string format = $"D{total.ToString().Length}";
+            Console.WriteLine($"Processing {total} songs!");
+            
 
             TjaProcessor tjaProcessor = new TjaProcessor(_categoryId);
-
             foreach (DirectoryInfo subDirectory in subDirectories)
             {
                 FileInfo tjaFile = subDirectory.GetTjaFile();
                 FileInfo mp3File = subDirectory.GetMp3File();
 
+                Console.Write($"[{count.ToString(format)}/{total.ToString()}] {Path.GetFileNameWithoutExtension(tjaFile.FullName)}..");
+
                 string outputPath = $"{_outputDirectory.FullName}\\{id}";
 
                 Directory.CreateDirectory(outputPath);
 
+#if !DEBUG
                 mp3File.CopyTo($"{outputPath}\\main.mp3",true);
+#endif
+
                 tjaFile.CopyTo($"{outputPath}\\main.tja", true);
 
                 if (_generateMarkers) //behind a switch for now since I don't want to piss off my FTP server (yet)
@@ -74,12 +82,20 @@ namespace TaikoSongProcessor.Lib
 
                 Song newSong = tjaProcessor.Process(tjaFile, id);
 
-                _songs.Add(newSong);
-
-                Console.Write("OK! \n");
+                if (newSong != null)
+                {
+                    _songs.Add(newSong);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("OK! \n");
+                    Console.ResetColor();
+                    succesful += 1;
+                }
 
                 id += 1;
+                count += 1;
             }
+
+            Console.WriteLine($"Succesfully processed {succesful} songs out of {total}!");
 
             string json = JsonSerializer.Serialize(_songs);
 

@@ -17,17 +17,26 @@ namespace TaikoSongProcessor.lib
 
         public Song Process(FileInfo tjaFile, int id)
         {
-            Song song;
+            Song song = null;
             _id = id;
             try
             {
                 _tjaFileContents = File.ReadAllLines(tjaFile.FullName, Encoding.GetEncoding(932)).ToList();
-                song = TjaToSong();
+
+                if (_tjaFileContents.Count > 0)
+                {
+                    song = TjaToSong();
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write("Empty file!\n");
+                    Console.ResetColor();
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
             }
 
             return song;
@@ -44,8 +53,6 @@ namespace TaikoSongProcessor.lib
         private Song TjaToSong()
         {
             var title = GetStringValue("title").Replace("feat", "ft");
-
-            Console.Write($"Processing {title}..");
 
             Song song = new Song
             {
@@ -97,7 +104,7 @@ namespace TaikoSongProcessor.lib
                 return result;
             }
 
-            return 0;
+            return 100;
         }
 
         private LanguageStrings GetLanguageStrings(string fieldName)
