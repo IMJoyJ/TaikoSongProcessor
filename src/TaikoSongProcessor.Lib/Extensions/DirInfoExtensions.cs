@@ -12,7 +12,7 @@ namespace TaikoSongProcessor.Lib.Extensions
 
         public static FileInfo GetMp3File(this DirectoryInfo directory)
         {
-            return directory.GetFiles("main.mp3").Any() ? directory.GetFiles("main.mp3").FirstOrDefault() : directory.GetFiles("*.mp3").FirstOrDefault();
+            return directory.GetFiles("main.ogg").Any() ? directory.GetFiles("main.ogg").FirstOrDefault() : directory.GetFiles("*.ogg").FirstOrDefault();
         }
 
         public static FileInfo[] GetOszFiles(this DirectoryInfo directory)
