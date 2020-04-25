@@ -22,29 +22,29 @@ namespace TaikoSongProcessor.Lib
 
         public SongProcessor(DirectoryInfo directory, int startId, int categoryId, bool generateMarkerFiles = false)
         {
-            _directory = directory;
-            _startId = startId;
-            _categoryId = categoryId;
-            _outputDirectory = new DirectoryInfo(Directory.GetCurrentDirectory()).CreateSubdirectory($"Output/Category {categoryId}/");
-            _generateMarkers = generateMarkerFiles;
+            this._directory = directory;
+            this._startId = startId;
+            this._categoryId = categoryId;
+            this._outputDirectory = new DirectoryInfo(Directory.GetCurrentDirectory()).CreateSubdirectory($"Output/Category {categoryId}/");
+            this._generateMarkers = generateMarkerFiles;
         }
 
         public void ProcessDirectory()
         {
-            var subDirectories = _directory.GetDirectories().Where(dir => dir.ContainsSong()).ToList();
-            var oszSongs = _directory.GetOszFiles();
+            var subDirectories = this._directory.GetDirectories().Where(dir => dir.ContainsSong()).ToList();
+            var oszSongs = this._directory.GetOszFiles();
 
-            if (_outputDirectory.GetDirectories().Length > 0)
+            if (this._outputDirectory.GetDirectories().Length > 0)
             {
                 Console.WriteLine("Cleaning up output directory..");
-                foreach (DirectoryInfo directoryInfo in _outputDirectory.GetDirectories())
+                foreach (DirectoryInfo directoryInfo in this._outputDirectory.GetDirectories())
                 {
                     directoryInfo.Delete(true);
                 }
             }
 
             int total = subDirectories.Count + oszSongs.Length;
-            int id = _startId;
+            int id = this._startId;
             int count = 1;
             int succesful = 0;
 
@@ -53,9 +53,9 @@ namespace TaikoSongProcessor.Lib
 
             if (oszSongs.Any())
             {
-                DirectoryInfo tempDirectory = _outputDirectory.CreateSubdirectory("temp");
+                DirectoryInfo tempDirectory = this._outputDirectory.CreateSubdirectory("temp");
 
-                OsuProcessor osuProcessor = new OsuProcessor(_categoryId, tempDirectory);
+                OsuProcessor osuProcessor = new OsuProcessor(this._categoryId, tempDirectory);
                 foreach (FileInfo fileInfo in oszSongs)
                 {
                     Console.Write(
@@ -64,15 +64,15 @@ namespace TaikoSongProcessor.Lib
                     Song newSong = osuProcessor.Process(fileInfo, id);
                     if (newSong != null)
                     {
-                        _songs.Add(newSong);
+                        this._songs.Add(newSong);
 
-                        string outputPath = $"{_outputDirectory.FullName}\\{id}";
+                        string outputPath = $"{this._outputDirectory.FullName}{Path.DirectorySeparatorChar}{id}";
 
                         Directory.CreateDirectory(outputPath);
 
                         foreach (FileInfo enumerateFile in tempDirectory.EnumerateFiles())
                         {
-                            enumerateFile.MoveTo($"{outputPath}\\{enumerateFile.Name}");
+                            enumerateFile.MoveTo($"{outputPath}{Path.DirectorySeparatorChar}{enumerateFile.Name}");
                         }
 
                         Console.ForegroundColor = ConsoleColor.Green;
@@ -93,11 +93,11 @@ namespace TaikoSongProcessor.Lib
 
             if (subDirectories.Any())
             {
-                TjaProcessor tjaProcessor = new TjaProcessor(_categoryId);
+                TjaProcessor tjaProcessor = new TjaProcessor(this._categoryId);
                 foreach (DirectoryInfo subDirectory in subDirectories)
                 {
                     FileInfo tjaFile = subDirectory.GetTjaFile();
-                    FileInfo mp3File = subDirectory.GetMp3File();
+                    FileInfo musicFile = subDirectory.GetMusicFile();
 
                     Console.Write(
                         $"[{count.ToString(format)}/{total.ToString()}] {Path.GetFileNameWithoutExtension(tjaFile.FullName)}..");
@@ -106,24 +106,24 @@ namespace TaikoSongProcessor.Lib
 
                     if (newSong != null)
                     {
-                        _songs.Add(newSong);
+                        this._songs.Add(newSong);
                     
                     
-                        string outputPath = $"{_outputDirectory.FullName}\\{id}";
+                        string outputPath = $"{this._outputDirectory.FullName}{Path.DirectorySeparatorChar}{id}";
 
                         Directory.CreateDirectory(outputPath);
 
 #if !DEBUG
-                mp3File.CopyTo($"{outputPath}\\main.mp3",true);
+                musicFile.CopyTo($"{outputPath}{Path.DirectorySeparatorChar}main.ogg",true);
 #endif
 
-                        tjaFile.CopyTo($"{outputPath}\\main.tja", true);
+                        tjaFile.CopyTo($"{outputPath}{Path.DirectorySeparatorChar}main.tja", true);
 
-                        if (_generateMarkers) //behind a switch for now since I don't want to piss off my FTP server (yet)
+                        if (this._generateMarkers) //behind a switch for now since I don't want to piss off my FTP server (yet)
                         {
                             HepburnConverter hepburn = new HepburnConverter();
                             string markerFile =
-                                $"{outputPath}\\{Path.GetFileNameWithoutExtension(WanaKana.ToRomaji(hepburn, tjaFile.FullName))}";
+                                $"{outputPath}{Path.DirectorySeparatorChar}{Path.GetFileNameWithoutExtension(WanaKana.ToRomaji(hepburn, tjaFile.FullName))}";
 
                             if (!File.Exists(markerFile))
                             {
@@ -146,9 +146,9 @@ namespace TaikoSongProcessor.Lib
 
             Console.WriteLine($"\nSuccesfully processed {succesful} songs out of {total}!");
 
-            string json = JsonSerializer.Serialize(_songs);
+            string json = JsonSerializer.Serialize(this._songs);
             Console.WriteLine("Exporting json...");
-            File.WriteAllText($@"{_outputDirectory}\\songs.json", json, Encoding.GetEncoding(932));
+            File.WriteAllText($@"{this._outputDirectory}{Path.DirectorySeparatorChar}songs.json", json, Encoding.GetEncoding(932));
 
             Console.WriteLine($"\nDone! Enjoy! Don't forget to import songs.json to mongoDB!");
         }

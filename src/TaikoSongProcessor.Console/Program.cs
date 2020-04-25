@@ -12,47 +12,122 @@ namespace TaikoSongProcessor.ConsoleApp
     {
         static async Task Main(string[] args)
         {
+            if (args.Length < 4)
+            {
+                Console.WriteLine("You can also run this program with a syntax below:");
+                Console.WriteLine("TaikoSongProcessor startid categoryid generatemarker[yn] folder");
+            }
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Console.OutputEncoding = Encoding.GetEncoding(932); //needed to enable moonrunes
 
             WriteWelcomeMessage();
-            WriteSongDescription();
 
-            int startId = RequestInt("Enter song ID to start with");
-
-            WriteCategoryDescription();
-
-            int categoryId = RequestInt("Enter category ID");
-
-            var generateMarkers = false;
-
-            WriteMarkerFileDescription();
-
-            ConsoleKey markerYesNo;
-
-            Console.WriteLine("Do you want to generate \"marker\" files? (y/N) ");
-
-            do
+            int startId;
+            if (args.Length > 0)
             {
-                markerYesNo = Console.ReadKey(true).Key;
-
-                if (markerYesNo.Equals(ConsoleKey.Enter) || markerYesNo.Equals(ConsoleKey.N))
+                try
                 {
-                    generateMarkers = false;
-                    Console.Write("N");
-                    Console.WriteLine();
+                    startId = int.Parse(args[0]);
                 }
-                else if(markerYesNo.Equals(ConsoleKey.Y))
+                catch
                 {
-                    generateMarkers = true;
-                    Console.Write("Y");
-                    Console.WriteLine();
+                    WriteSongDescription();
+                    startId = RequestInt("Enter song ID to start with");
                 }
-            } while (markerYesNo != ConsoleKey.Y &&
-                     markerYesNo != ConsoleKey.Enter &&
-                     markerYesNo != ConsoleKey.N);
+            }
+            else
+            {
+                WriteSongDescription();
+                startId = RequestInt("Enter song ID to start with");
+            }
 
-            DirectoryInfo directory = RequestDirectory("Enter folder to process");
+
+            int categoryId;
+            if (args.Length > 1)
+            {
+                try
+                {
+                    categoryId = int.Parse(args[1]);
+                }
+                catch
+                {
+                    WriteCategoryDescription();
+                    categoryId = RequestInt("Enter category ID");
+                }
+            }
+            else
+            {
+                WriteCategoryDescription();
+                categoryId = RequestInt("Enter song ID to start with");
+            }
+
+            bool generateMarkers = false;
+            bool needAskGenerateMarkers = true;
+            if (args.Length > 2)
+            {
+                switch (args[2])
+                {
+                    case "Y":
+                    case "y":
+                    case "1":
+                        generateMarkers = true;
+                        needAskGenerateMarkers = false;
+                        break;
+                    case "N":
+                    case "n":
+                    case "0":
+                        needAskGenerateMarkers = false;
+                        break;
+                }
+            }
+            if (needAskGenerateMarkers)
+            {
+                WriteMarkerFileDescription();
+
+                ConsoleKey markerYesNo;
+
+                Console.WriteLine("Do you want to generate \"marker\" files? (y/N) ");
+
+                do
+                {
+                    markerYesNo = Console.ReadKey(true).Key;
+
+                    if (markerYesNo.Equals(ConsoleKey.Enter) || markerYesNo.Equals(ConsoleKey.N))
+                    {
+                        generateMarkers = false;
+                        Console.Write("N");
+                        Console.WriteLine();
+                    }
+                    else if (markerYesNo.Equals(ConsoleKey.Y))
+                    {
+                        generateMarkers = true;
+                        Console.Write("Y");
+                        Console.WriteLine();
+                    }
+                } while (markerYesNo != ConsoleKey.Y &&
+                         markerYesNo != ConsoleKey.Enter &&
+                         markerYesNo != ConsoleKey.N);
+            }
+            DirectoryInfo directory = null;
+            if (args.Length > 3)
+            {
+                try
+                {
+                    directory = new DirectoryInfo(args[3]);
+                }
+                catch
+                {
+
+                }
+                if (!directory.Exists)
+                {
+                    directory = null;
+                }
+            }
+            if (directory == null)
+            {
+                directory = RequestDirectory("Enter folder to process");
+            }
 
             SongProcessor songProcessor = new SongProcessor(directory, startId, categoryId, generateMarkers);
 

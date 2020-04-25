@@ -10,7 +10,7 @@ namespace TaikoSongProcessor.Lib.Extensions
             return directory.GetFiles("main.tja").Any() ? directory.GetFiles("main.tja").FirstOrDefault() : directory.GetFiles("*.tja").FirstOrDefault(tja=>!tja.Name.Contains("裏")); //don't select backsides
         }
 
-        public static FileInfo GetMp3File(this DirectoryInfo directory)
+        public static FileInfo GetMusicFile(this DirectoryInfo directory)
         {
             return directory.GetFiles("main.ogg").Any() ? directory.GetFiles("main.ogg").FirstOrDefault() : directory.GetFiles("*.ogg").FirstOrDefault();
         }
@@ -24,11 +24,11 @@ namespace TaikoSongProcessor.Lib.Extensions
         {
             FileInfo tjaFile = directory.GetTjaFile();
 
-            FileInfo mp3File = directory.GetMp3File();
+            FileInfo musicFile = directory.GetMusicFile();
 
             FileInfo[] oszFiles = directory.GetOszFiles();
 
-            return (tjaFile != null && mp3File != null) || oszFiles.Any();
+            return (tjaFile != null && musicFile != null) || oszFiles.Any();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using TaikoSongProcessor.Lib;
 using TaikoSongProcessor.Lib.Models;
@@ -11,21 +12,23 @@ namespace TaikoSongProcessor.lib
 {
     public class TjaProcessor
     {
-        private readonly int _categoryId;
-        private int _id;
-        private List<string> _tjaFileContents;
+        private readonly int categoryId;
+        private int id;
+        private List<string> tjaFileContents;
 
         public Song Process(FileInfo tjaFile, int id)
         {
             Song song = null;
-            _id = id;
+            this.id = id;
             try
             {
-                _tjaFileContents = File.ReadAllLines(tjaFile.FullName, Encoding.GetEncoding(932)).ToList();
+                string fileContent = File.ReadAllText(tjaFile.FullName, Encoding.GetEncoding(932));
+                this.tjaFileContents = File.ReadAllLines(tjaFile.FullName, Encoding.GetEncoding(932)).ToList();
 
-                if (_tjaFileContents.Count > 0)
+                if (this.tjaFileContents.Count > 0)
                 {
-                    song = TjaToSong();
+                    song = this.TjaToSong();
+                    song.Hash = ToBase64String(this.GetMd5(fileContent), false, false).TrimEnd('=');
                 }
                 else
                 {
@@ -41,10 +44,46 @@ namespace TaikoSongProcessor.lib
 
             return song;
         }
-
+        public static string ToBase64String(string str, bool convertSlash, bool onlyAllowAlphabetAndNumber)
+        {
+            byte[] resultArray = Encoding.UTF8.GetBytes(str);
+            string result = Convert.ToBase64String(resultArray, 0, resultArray.Length);
+            if (convertSlash)
+            {
+                result = result.Replace("/", "_").Replace("+", "-");
+            }
+            else if (onlyAllowAlphabetAndNumber)
+            {
+                result = result.Replace("/", "").Replace("+", "");
+            }
+            return result;
+        }
+        private string GetMd5(string password, int bit = 32)
+        {
+            MD5CryptoServiceProvider md5Hasher = new MD5CryptoServiceProvider();
+            byte[] hashedDataBytes;
+            hashedDataBytes = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(password));
+            StringBuilder tmp = new StringBuilder();
+            foreach (byte i in hashedDataBytes)
+            {
+                tmp.Append(i.ToString("x2"));
+            }
+            if (bit == 16)
+            {
+                return tmp.ToString().Substring(8, 16);
+            }
+            else if (bit == 32)
+            {
+                return tmp.ToString();//默认情况
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
         public TjaProcessor(int categoryId)
         {
-            _categoryId = categoryId;
+            this.categoryId = categoryId;
         }
 
         /// <summary>
@@ -52,26 +91,26 @@ namespace TaikoSongProcessor.lib
         /// </summary>
         private Song TjaToSong()
         {
-            var title = GetStringValue("title").Replace("feat", "ft");
+            var title = this.GetStringValue("title").Replace("feat", "ft");
 
             Song song = new Song
             {
-                Id = _id,
-                CategoryId = _categoryId,
-                Title = GetStringValue("title").Replace("feat", "ft"),
-                Subtitle = GetStringValue("subtitle"),
-                Order = _id,
-                Preview = GetDoubleValue("demostart"),
+                Id = id,
+                CategoryId = categoryId,
+                Title = this.GetStringValue("title").Replace("feat", "ft"),
+                Subtitle = this.GetStringValue("subtitle"),
+                Order = id,
+                Preview = this.GetDoubleValue("demostart"),
                 Type = SongTypeEnum.Tja.ToString().ToLower(),
                 // Offset = GetDoubleValue("offset"),
                 Offset = 0,
-                TitleLang = GetLanguageStrings("title"),
-                SubtitleLang = GetLanguageStrings("subtitle"),
-                Courses = GetCourses()
+                TitleLang = this.GetLanguageStrings("title"),
+                SubtitleLang = this.GetLanguageStrings("subtitle"),
+                Courses = this.GetCourses()
                 
             };
 
-            double volume = GetDoubleValue("songvol");
+            double volume = this.GetDoubleValue("songvol");
             if (volume == 0)
             {
                 song.Volume = 1;
@@ -86,7 +125,7 @@ namespace TaikoSongProcessor.lib
 
         private string GetStringValue(string fieldName, List<string> list = null)
         {
-            List<string> tjaList = list ?? _tjaFileContents;
+            List<string> tjaList = list ?? this.tjaFileContents;
 
             string value = tjaList.FirstOrDefault(line => line.StartsWith(fieldName, StringComparison.InvariantCultureIgnoreCase));
             if (!string.IsNullOrWhiteSpace(value))
@@ -107,7 +146,7 @@ namespace TaikoSongProcessor.lib
 
         private double GetDoubleValue(string fieldName, List<string> list = null)
         {
-            string value = GetStringValue(fieldName, list);
+            string value = this.GetStringValue(fieldName, list);
 
             if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
             {
@@ -121,11 +160,11 @@ namespace TaikoSongProcessor.lib
         {
             LanguageStrings strings = new LanguageStrings
             {
-                en = GetStringValue($"{fieldName}en"),
-                cn = GetStringValue($"{fieldName}cn"),
-                tw = GetStringValue($"{fieldName}tw"),
-                ja = GetStringValue($"{fieldName}ja"),
-                ko = GetStringValue($"{fieldName}ko")
+                en = this.GetStringValue($"{fieldName}en"),
+                cn = this.GetStringValue($"{fieldName}cn"),
+                tw = this.GetStringValue($"{fieldName}tw"),
+                ja = this.GetStringValue($"{fieldName}ja"),
+                ko = this.GetStringValue($"{fieldName}ko")
             };
 
             return strings;
@@ -135,11 +174,11 @@ namespace TaikoSongProcessor.lib
         {
             Courses courses = new Courses()
             {
-                Easy = GetCourse(DifficultyEnum.Easy),
-                Normal = GetCourse(DifficultyEnum.Normal),
-                Hard = GetCourse(DifficultyEnum.Hard),
-                Oni = GetCourse(DifficultyEnum.Oni),
-                Ura = GetCourse(DifficultyEnum.Ura)
+                Easy = this.GetCourse(DifficultyEnum.Easy),
+                Normal = this.GetCourse(DifficultyEnum.Normal),
+                Hard = this.GetCourse(DifficultyEnum.Hard),
+                Oni = this.GetCourse(DifficultyEnum.Oni),
+                Ura = this.GetCourse(DifficultyEnum.Ura)
             };
 
             return courses;
@@ -148,7 +187,7 @@ namespace TaikoSongProcessor.lib
         private Course GetCourse(DifficultyEnum difficulty)
         {
 
-            List<string> findCourse = _tjaFileContents.SkipWhile(line =>
+            List<string> findCourse = this.tjaFileContents.SkipWhile(line =>
                     !line.StartsWith($"course:{difficulty.ToString()}", StringComparison.InvariantCultureIgnoreCase) &&
                     !line.StartsWith($"course:{(int)difficulty}", StringComparison.InvariantCultureIgnoreCase))
                 .ToList();
@@ -160,7 +199,7 @@ namespace TaikoSongProcessor.lib
 
             Course course = new Course
             {
-                Stars = (int) GetDoubleValue("level", findCourse)
+                Stars = (int) this.GetDoubleValue("level", findCourse)
             };
 
             return course;

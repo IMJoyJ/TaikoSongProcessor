@@ -97,8 +97,8 @@ namespace TaikoSongProcessor.Lib.Models
 
         public Song()
         {
-            GeneratedOn = DateTime.Now;
-            Hash = Guid.NewGuid()
+            this.GeneratedOn = DateTime.Now;
+            this.Hash = Guid.NewGuid()
                 .ToString(); //Taiko-web doesn't actually require a real hash here - any randomized poo will work. Used to id highscores.
         }
     }
@@ -130,7 +130,7 @@ namespace TaikoSongProcessor.Lib.Models
 
         public bool HasCourses()
         {
-            return Easy != null || Normal != null || Hard != null || Oni != null || Ura != null;
+            return this.Easy != null || this.Normal != null || this.Hard != null || this.Oni != null || this.Ura != null;
         }
     }
 
